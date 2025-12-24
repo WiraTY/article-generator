@@ -1,26 +1,39 @@
 {
-  "name": "nextjs-migration",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "next": "16.1.1",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.1",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "name": "article-generator",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev --turbopack",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint"
+    },
+    "dependencies": {
+        "@google/generative-ai": "^0.21.0",
+        "bcryptjs": "^2.4.3",
+        "better-sqlite3": "^11.7.0",
+        "drizzle-orm": "^0.39.1",
+        "lucide-react": "^0.468.0",
+        "next": "^15.3.3",
+        "openai": "^6.15.0",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "react-quill-new": "^3.7.0",
+        "slugify": "^1.6.6"
+    },
+    "devDependencies": {
+        "@eslint/eslintrc": "^3",
+        "@tailwindcss/postcss": "^4.0.0",
+        "@tailwindcss/typography": "^0.5.16",
+        "@types/bcryptjs": "^2.4.6",
+        "@types/better-sqlite3": "^7.6.12",
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "eslint": "^9",
+        "eslint-config-next": "^15.3.3",
+        "tailwindcss": "^4.0.0",
+        "typescript": "^5",
+        "typescript-eslint": "^8"
+    }
 }

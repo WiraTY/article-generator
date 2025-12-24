@@ -1,26 +1,240 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Smooth scroll for TOC navigation */
+html {
+  scroll-behavior: smooth;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Base styles */
+body {
+  @apply bg-white text-gray-900 antialiased;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-bold tracking-tight text-gray-900;
+}
+
+/* Button Styles */
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed gap-2;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed gap-2 bg-gray-900 text-white hover:bg-gray-800 focus:ring-gray-900 shadow-sm border border-transparent;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed gap-2 bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-300 shadow-sm;
+}
+
+.btn-danger {
+  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed gap-2 bg-red-600 text-white hover:bg-red-700 focus:ring-red-600 border border-transparent shadow-sm;
+}
+
+/* Card Styles */
+.card {
+  @apply bg-white rounded-xl border border-gray-200 shadow-sm transition-all hover:shadow-md;
+}
+
+/* Form Styles */
+.input {
+  @apply block w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-200 placeholder:text-gray-400 text-sm;
+}
+
+.label {
+  @apply block text-sm font-medium text-gray-700 mb-1.5;
+}
+
+/* Badge Styles */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Typography Overrides for Article */
+.prose {
+  max-width: none !important;
+  width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.prose>* {
+  max-width: 100% !important;
+  overflow-wrap: break-word;
+}
+
+.prose img,
+.prose video,
+.prose figure,
+.prose iframe,
+.prose table {
+  display: block;
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 0.75rem;
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+.prose table {
+  display: table;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+.prose thead {
+  background-color: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.prose th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.prose td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.prose tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.prose tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Responsive table wrapper */
+.prose .table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.prose pre {
+  max-width: 100%;
+  overflow-x: auto !important;
+  white-space: pre;
+  word-break: normal;
+  background-color: #1f2937;
+  color: #f3f4f6;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.prose code {
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.prose h2 {
+  @apply text-2xl font-bold text-gray-900 mt-12 mb-6;
+  scroll-margin-top: 5rem;
+  /* 80px offset for sticky navbar */
+}
+
+.prose h3 {
+  @apply text-xl font-bold text-gray-900 mt-8 mb-4;
+  scroll-margin-top: 5rem;
+  /* 80px offset for sticky navbar */
+}
+
+.prose p {
+  @apply text-gray-700 leading-relaxed mb-6 text-justify;
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.prose ul,
+.prose ol {
+  @apply ml-6 mb-6 text-gray-700 space-y-2;
+}
+
+.prose ul {
+  @apply list-disc;
+}
+
+.prose ol {
+  @apply list-decimal;
+}
+
+.prose li {
+  padding-left: 0.5rem;
+}
+
+.prose a {
+  @apply text-blue-600 hover:underline break-words;
+}
+
+.prose strong {
+  @apply font-semibold text-gray-900;
+}
+
+.prose p:empty {
+  display: none;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Bottom sheet slide-up animation */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Safe area padding for iOS */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
 }
