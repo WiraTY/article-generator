@@ -20,16 +20,3 @@ export async function requireAuth(): Promise<NextResponse | null> {
     // For now, we just check if cookie exists
     return null;
 }
-
-/**
- * Helper to wrap API handlers with auth check
- */
-export function withAuth<T>(
-    handler: () => Promise<NextResponse<T>>
-): Promise<NextResponse<T | { error: string }>> {
-    return (async () => {
-        const authError = await requireAuth();
-        if (authError) return authError;
-        return handler();
-    })();
-}
