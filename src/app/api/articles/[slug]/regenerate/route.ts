@@ -5,9 +5,9 @@ import { eq } from 'drizzle-orm';
 import { generateArticle } from '@/lib/services/aiService';
 
 let initialized = false;
-function ensureInit() {
+async function ensureInit() {
     if (!initialized) {
-        initializeDatabase();
+        await initializeDatabase();
         initialized = true;
     }
 }
@@ -17,7 +17,7 @@ export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ slug: string }> }
 ) {
-    ensureInit();
+    await ensureInit();
     try {
         const { slug } = await params;
         const { customPrompt } = await request.json();

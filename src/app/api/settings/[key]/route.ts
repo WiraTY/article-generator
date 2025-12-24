@@ -4,9 +4,9 @@ import { settings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 let initialized = false;
-function ensureInit() {
+async function ensureInit() {
     if (!initialized) {
-        initializeDatabase();
+        await initializeDatabase();
         initialized = true;
     }
 }
@@ -16,7 +16,7 @@ export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ key: string }> }
 ) {
-    ensureInit();
+    await ensureInit();
     try {
         const { key } = await params;
         const result = await db.select().from(settings).where(eq(settings.key, key));

@@ -4,9 +4,9 @@ import { articles } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 let initialized = false;
-function ensureInit() {
+async function ensureInit() {
     if (!initialized) {
-        initializeDatabase();
+        await initializeDatabase();
         initialized = true;
     }
 }
@@ -16,7 +16,7 @@ export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ slug: string }> }
 ) {
-    ensureInit();
+    await ensureInit();
     try {
         const { slug } = await params;
         const article = await db.select().from(articles).where(eq(articles.slug, slug));
@@ -37,7 +37,7 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ slug: string }> }
 ) {
-    ensureInit();
+    await ensureInit();
     try {
         const { slug } = await params;
         const { title, metaDescription, contentHtml, imageUrl, imageAlt, mainKeyword, tags } = await request.json();
@@ -79,7 +79,7 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ slug: string }> }
 ) {
-    ensureInit();
+    await ensureInit();
     try {
         const { slug } = await params;
         const existing = await db.select().from(articles).where(eq(articles.slug, slug));

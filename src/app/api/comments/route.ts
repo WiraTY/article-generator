@@ -5,9 +5,9 @@ import { eq, desc, and } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 
 let initialized = false;
-function ensureInit() {
+async function ensureInit() {
     if (!initialized) {
-        initializeDatabase();
+        await initializeDatabase();
         initialized = true;
     }
 }
@@ -26,7 +26,7 @@ async function getSession() {
 
 // GET /api/comments?articleId=X&admin=true - Get comments
 export async function GET(request: NextRequest) {
-    ensureInit();
+    await ensureInit();
     try {
         const { searchParams } = new URL(request.url);
         const articleId = searchParams.get('articleId');
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 
 // POST /api/comments - Add a comment (check moderation setting)
 export async function POST(request: NextRequest) {
-    ensureInit();
+    await ensureInit();
     try {
         const { articleId, name, comment } = await request.json();
 
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/comments - Approve or reject a comment
 export async function PUT(request: NextRequest) {
-    ensureInit();
+    await ensureInit();
     try {
         const session = await getSession();
         if (!session || (session.role !== 'super_admin' && session.role !== 'author')) {
@@ -168,7 +168,7 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/comments?id=X - Delete a comment
 export async function DELETE(request: NextRequest) {
-    ensureInit();
+    await ensureInit();
     try {
         const session = await getSession();
         if (!session || (session.role !== 'super_admin' && session.role !== 'author')) {

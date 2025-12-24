@@ -11,7 +11,7 @@ function generateToken(): string {
 }
 
 export async function POST(request: NextRequest) {
-    initializeDatabase();
+    await initializeDatabase();
 
     try {
         const { email, password } = await request.json();

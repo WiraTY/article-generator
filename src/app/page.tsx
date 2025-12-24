@@ -9,7 +9,7 @@ import { ArrowRight, PenTool, LayoutDashboard, Search, Calendar, Zap, LogIn } fr
 export const dynamic = 'force-dynamic';
 
 async function getArticles() {
-  initializeDatabase();
+  await initializeDatabase();
   return db.select({
     id: articles.id,
     title: articles.title,
@@ -24,7 +24,7 @@ async function getArticles() {
 }
 
 async function getBranding() {
-  initializeDatabase();
+  await initializeDatabase();
   const result = await db.select().from(settings).where(eq(settings.key, 'branding'));
   if (result[0]?.value) {
     try { return JSON.parse(result[0].value); } catch { }

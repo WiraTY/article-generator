@@ -30,7 +30,7 @@ function getZaiClient(): OpenAI {
  */
 async function getAIProvider(): Promise<string> {
     try {
-        initializeDatabase();
+        await initializeDatabase();
         const result = await db.select().from(settings).where(eq(settings.key, 'aiProvider'));
         if (result[0]?.value) {
             // Handle both old format {provider, zaiApiKey} and new format (just provider string)

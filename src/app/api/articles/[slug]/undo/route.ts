@@ -4,9 +4,9 @@ import { articles } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 let initialized = false;
-function ensureInit() {
+async function ensureInit() {
     if (!initialized) {
-        initializeDatabase();
+        await initializeDatabase();
         initialized = true;
     }
 }
@@ -16,7 +16,7 @@ export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ slug: string }> }
 ) {
-    ensureInit();
+    await ensureInit();
     try {
         const { slug } = await params;
 

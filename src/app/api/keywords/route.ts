@@ -5,16 +5,16 @@ import { desc, eq } from 'drizzle-orm';
 import { generateKeywords } from '@/lib/services/aiService';
 
 let initialized = false;
-function ensureInit() {
+async function ensureInit() {
     if (!initialized) {
-        initializeDatabase();
+        await initializeDatabase();
         initialized = true;
     }
 }
 
 // GET /api/keywords - Get all keywords
 export async function GET() {
-    ensureInit();
+    await ensureInit();
     try {
         const allKeywords = await db.select().from(keywords).orderBy(desc(keywords.createdAt));
         return NextResponse.json(allKeywords);
@@ -26,7 +26,7 @@ export async function GET() {
 
 // POST /api/keywords - Save keywords or research new ones
 export async function POST(request: NextRequest) {
-    ensureInit();
+    await ensureInit();
     try {
         const body = await request.json();
 
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/keywords (with id in query params)
 export async function DELETE(request: NextRequest) {
-    ensureInit();
+    await ensureInit();
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');

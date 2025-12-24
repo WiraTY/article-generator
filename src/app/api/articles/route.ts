@@ -7,16 +7,16 @@ import slugify from 'slugify';
 
 // Initialize database on first request
 let initialized = false;
-function ensureInit() {
+async function ensureInit() {
     if (!initialized) {
-        initializeDatabase();
+        await initializeDatabase();
         initialized = true;
     }
 }
 
 // GET /api/articles - Get all articles
 export async function GET() {
-    ensureInit();
+    await ensureInit();
     try {
         const allArticles = await db.select({
             id: articles.id,
@@ -41,7 +41,7 @@ export async function GET() {
 
 // POST /api/articles - Generate new article
 export async function POST(request: NextRequest) {
-    ensureInit();
+    await ensureInit();
     try {
         const { keywordId, keyword, intent, customPrompt } = await request.json();
 

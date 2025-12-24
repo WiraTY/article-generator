@@ -20,7 +20,7 @@ async function isSuperAdmin(): Promise<boolean> {
 
 // GET /api/users - Get all users (Super Admin only)
 export async function GET() {
-    initializeDatabase();
+    await initializeDatabase();
 
     if (!await isSuperAdmin()) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -43,7 +43,7 @@ export async function GET() {
 
 // POST /api/users - Create new user (Super Admin only)
 export async function POST(request: NextRequest) {
-    initializeDatabase();
+    await initializeDatabase();
 
     if (!await isSuperAdmin()) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/users - Update user (Super Admin only)
 export async function PUT(request: NextRequest) {
-    initializeDatabase();
+    await initializeDatabase();
 
     if (!await isSuperAdmin()) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -112,7 +112,7 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/users - Delete user (Super Admin only)
 export async function DELETE(request: NextRequest) {
-    initializeDatabase();
+    await initializeDatabase();
 
     if (!await isSuperAdmin()) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });

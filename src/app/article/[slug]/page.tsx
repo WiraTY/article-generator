@@ -13,13 +13,13 @@ import { ArrowLeft, Calendar, User, Tag, BookOpen, Clock, LogIn, LayoutDashboard
 export const dynamic = 'force-dynamic';
 
 async function getArticle(slug: string) {
-    initializeDatabase();
+    await initializeDatabase();
     const result = await db.select().from(articles).where(eq(articles.slug, slug));
     return result[0] || null;
 }
 
 async function getRelatedArticles(currentSlug: string) {
-    initializeDatabase();
+    await initializeDatabase();
     return db.select({
         id: articles.id,
         title: articles.title,
