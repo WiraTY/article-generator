@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogIn, Mail, Lock, Loader2, PenTool } from 'lucide-react';
+import { LogIn, Loader2, PenTool } from 'lucide-react';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -60,36 +60,26 @@ export default function LoginPage() {
                     <div className="space-y-5">
                         <div>
                             <label className="label">Email</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    type="email"
-                                    value={form.email}
-                                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                                    className="input pl-12"
-                                    placeholder="admin@admin.com"
-                                    required
-                                />
-                            </div>
+                            <input
+                                type="email"
+                                value={form.email}
+                                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                                className="input"
+                                placeholder="Enter your email"
+                                required
+                            />
                         </div>
 
                         <div>
                             <label className="label">Password</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    type="password"
-                                    value={form.password}
-                                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                    className="input pl-12"
-                                    placeholder="••••••••"
-                                    required
-                                />
-                            </div>
+                            <input
+                                type="password"
+                                value={form.password}
+                                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                                className="input"
+                                placeholder="Enter your password"
+                                required
+                            />
                         </div>
 
                         <button

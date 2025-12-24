@@ -281,45 +281,47 @@ export default function ContentManagerPage() {
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-2 ml-4">
+                                <div className="flex items-center gap-1.5 ml-4">
                                     <Link
                                         href={`/article/${article.slug}`}
                                         target="_blank"
-                                        className="btn-secondary text-sm flex items-center gap-1.5"
+                                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                        title="Preview"
                                     >
                                         <Eye className="w-4 h-4" />
-                                        Preview
                                     </Link>
-                                    <button onClick={() => openEditor(article.slug)} className="btn-secondary text-sm flex items-center gap-1.5">
+                                    <button
+                                        onClick={() => openEditor(article.slug)}
+                                        className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                        title="Edit"
+                                    >
                                         <Edit className="w-4 h-4" />
-                                        Edit
                                     </button>
                                     <button
                                         onClick={() => setRegenerateModal({ slug: article.slug, keyword: article.mainKeyword || article.title })}
-                                        className="btn-secondary text-sm flex items-center gap-1.5"
+                                        className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                                         disabled={regeneratingSlug === article.slug}
+                                        title="Regenerate"
                                     >
                                         {regeneratingSlug === article.slug ? (
                                             <Loader2 className="w-4 h-4 animate-spin" />
                                         ) : (
                                             <RefreshCw className="w-4 h-4" />
                                         )}
-                                        Regenerate
                                     </button>
                                     {article.previousContentHtml && (
                                         <button
                                             onClick={() => handleUndo(article.slug)}
-                                            className="btn-secondary text-sm flex items-center gap-1.5 text-amber-600 hover:bg-amber-50"
-                                            title="Restore previous version"
+                                            className="p-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                            title="Undo"
                                         >
                                             <Undo2 className="w-4 h-4" />
-                                            Undo
                                         </button>
                                     )}
                                     <button
                                         onClick={() => handleDelete(article.slug)}
                                         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                        title="Delete article"
+                                        title="Delete"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
@@ -377,6 +379,7 @@ export default function ContentManagerPage() {
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div>
                                     <label className="label">Featured Image</label>
+                                    <p className="text-xs text-gray-500 mb-2">Recommended: 1200×630px (16:9 ratio) for optimal display</p>
                                     <div className="flex gap-2">
                                         <input
                                             type="text"

@@ -149,10 +149,7 @@ export default function SettingsPage() {
                                 <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold">
                                     G
                                 </div>
-                                <div>
-                                    <p className="font-semibold text-gray-900">Google Gemini</p>
-                                    <p className="text-xs text-gray-500">Uses GEMINI_API_KEY from env</p>
-                                </div>
+                                <p className="font-semibold text-gray-900">Google Gemini</p>
                             </label>
                             <label
                                 className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${aiProvider === 'zai'
@@ -171,10 +168,7 @@ export default function SettingsPage() {
                                 <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold">
                                     Z
                                 </div>
-                                <div>
-                                    <p className="font-semibold text-gray-900">Z.AI (GLM-4.7)</p>
-                                    <p className="text-xs text-gray-500">Uses ZAI_API_KEY from env</p>
-                                </div>
+                                <p className="font-semibold text-gray-900">Z.AI (GLM-4.7)</p>
                             </label>
                         </div>
                     </div>

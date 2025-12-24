@@ -107,19 +107,14 @@ export default function KeywordResearchPage() {
             {/* Research Form */}
             <div className="card p-6">
                 <form onSubmit={handleResearch} className="flex gap-3">
-                    <div className="relative flex-1">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="w-5 h-5 text-gray-400" />
-                        </div>
-                        <input
-                            type="text"
-                            value={seedKeyword}
-                            onChange={(e) => setSeedKeyword(e.target.value)}
-                            placeholder="Enter seed keyword (e.g. 'kampung inggris')"
-                            className="input w-full pl-11"
-                            disabled={researching}
-                        />
-                    </div>
+                    <input
+                        type="text"
+                        value={seedKeyword}
+                        onChange={(e) => setSeedKeyword(e.target.value)}
+                        placeholder="Enter seed keyword (e.g. 'kampung inggris')"
+                        className="input w-full flex-1"
+                        disabled={researching}
+                    />
                     <button type="submit" disabled={researching || !seedKeyword.trim()} className="btn-primary flex items-center gap-2">
                         {researching ? (
                             <>
