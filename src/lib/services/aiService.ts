@@ -113,6 +113,22 @@ ${productSection}${customSection}
 - Use simple, punchy sentences. Inject personality
 - OK to use light slang or Gen Z expressions naturally (but don't overdo it)
 
+**SEO REQUIREMENTS (CRITICAL - Follow these for high SEO score):**
+1. **Keyword in Title:** The title MUST contain the keyword "${keyword}" naturally.
+2. **Keyword in Meta Description:** The meta description MUST include "${keyword}".
+3. **Keyword in Introduction:** Mention "${keyword}" within the first 100 words/first paragraph.
+4. **Keyword Density:** Use "${keyword}" naturally throughout the article (aim for 1-2% density, roughly 8-15 times for 800-1000 words).
+5. **Heading Structure:** Use at least 4-5 <h2> headings and some <h3> subheadings.
+6. **Meta Description Length:** Keep between 120-160 characters.
+7. **Include Links:** Add 1-2 relevant external links using proper HTML: <a href="https://example.com">anchor text</a>.
+
+**READABILITY REQUIREMENTS (CRITICAL - Follow these for high readability score):**
+1. **Short Sentences:** Keep sentences under 20 words on average. Prefer 15 words or less.
+2. **Short Paragraphs:** Maximum 3 sentences per paragraph. Keep paragraphs under 100 words.
+3. **Use Active Voice:** Minimize passive voice (avoid "di-", "ter-", "ke-...-an" patterns in Indonesian).
+4. **Transition Words:** Start paragraphs with transition words like: "Selain itu,", "Namun,", "Jadi,", "Nah,", "Pertama,", "Selanjutnya,", "Karena itu,", "Meskipun,", etc.
+5. **Content Length:** Write 800-1000 words total.
+
 **Strict Guidelines:**
 1. **Title:** Create a catchy H1 title that contains the keyword "${keyword}". Make it compelling and click-worthy. PLAIN TEXT ONLY, no HTML tags.
 2. **Format:** Use HTML tags ONLY (<h2>, <h3>, <p>, <ul>, <li>, <strong>, <a>) for content_html. DO NOT use markdown. DO NOT use <html>, <head>, or <body> tags.
@@ -120,17 +136,18 @@ ${productSection}${customSection}
 4. **Introduction:** Mention "${keyword}" naturally in the first paragraph. Hook the reader immediately.
 5. **Body:** Write 800-1000 words. Keep paragraphs short (3 sentences max). Use bullet points for lists. Use <strong> for important terms.
 6. **Structure:** Use <h2> for main sections and <h3> for subsections. Create at least 4-5 main sections.
-7. **Meta Description:** MUST be PLAIN TEXT ONLY (no HTML tags like <strong>, <p>, etc). Max 160 characters. Include the keyword naturally. Keep it casual too!
+7. **Meta Description:** MUST be PLAIN TEXT ONLY (no HTML tags like <strong>, <p>, etc). 120-160 characters. Include the keyword naturally. Keep it casual too!
 8. **Tags:** Generate 3-5 relevant tags/labels for this article. Tags should be short (1-2 words each), lowercase, and relevant to the content.
 
 Return ONLY a valid JSON object with no additional text. Format:
 {
   "title": "Your compelling title here (plain text, no HTML)",
-  "meta_description": "Your meta description here - PLAIN TEXT ONLY, max 160 chars, NO HTML TAGS",
+  "meta_description": "Your meta description here - PLAIN TEXT ONLY, 120-160 chars, NO HTML TAGS",
   "tags": ["tag1", "tag2", "tag3"],
   "content_html": "<h2>First Section</h2><p>Content here...</p>..."
 }`;
 }
+
 
 /**
  * Build the standard prompt for keyword generation

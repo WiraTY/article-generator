@@ -247,7 +247,7 @@ export default async function HomePage() {
             <span className="font-bold text-gray-900">{branding.appName}</span>
           </div>
           <p className="text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} All rights reserved. Powered by Google Gemini AI.
+            &copy; {new Date().getFullYear()} All rights reserved.
           </p>
         </div>
       </footer>

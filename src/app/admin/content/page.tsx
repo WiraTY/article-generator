@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { FileText, Clock, Sparkles, Loader2, Edit, Trash2, Save, Eye, Target, X, Upload, RefreshCw, Undo2 } from 'lucide-react';
+import SeoScorePanel from '@/components/SeoScorePanel';
 
 // Dynamic import for rich text editor (client-side only)
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
@@ -335,7 +336,7 @@ export default function ContentManagerPage() {
             {/* Edit Modal */}
             {editingArticle && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+                    <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
                         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                                 <Edit className="w-5 h-5 text-gray-500" />
@@ -345,139 +346,152 @@ export default function ContentManagerPage() {
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-auto p-6 space-y-4">
-                            <div>
-                                <label className="label">Title</label>
-                                <input
-                                    type="text"
-                                    value={editForm.title}
-                                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                                    className="input"
-                                />
-                            </div>
-                            <div className="grid gap-4 md:grid-cols-2">
+                        <div className="flex-1 overflow-auto flex">
+                            {/* Main Editor */}
+                            <div className="flex-1 p-6 space-y-4 overflow-auto">
                                 <div>
-                                    <label className="label">Main Keyword</label>
+                                    <label className="label">Title</label>
                                     <input
                                         type="text"
-                                        value={editForm.mainKeyword}
-                                        onChange={(e) => setEditForm({ ...editForm, mainKeyword: e.target.value })}
+                                        value={editForm.title}
+                                        onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
                                         className="input"
                                     />
                                 </div>
-                                <div>
-                                    <label className="label">Tags (comma separated)</label>
-                                    <input
-                                        type="text"
-                                        value={editForm.tags}
-                                        onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })}
-                                        className="input"
-                                        placeholder="tag1, tag2, tag3"
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <label className="label">Featured Image</label>
-                                    <p className="text-xs text-gray-500 mb-2">Recommended: 1200×630px (16:9 ratio) for optimal display</p>
-                                    <div className="flex gap-2">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label className="label">Main Keyword</label>
                                         <input
                                             type="text"
-                                            value={editForm.imageUrl}
-                                            onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
-                                            className="input flex-1"
-                                            placeholder="https://... or upload"
+                                            value={editForm.mainKeyword}
+                                            onChange={(e) => setEditForm({ ...editForm, mainKeyword: e.target.value })}
+                                            className="input"
                                         />
-                                        <label className="btn-secondary flex items-center gap-2 cursor-pointer">
-                                            {uploading ? (
-                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                            ) : (
-                                                <Upload className="w-4 h-4" />
-                                            )}
-                                            <span className="hidden sm:inline">{uploading ? 'Uploading...' : 'Upload'}</span>
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                disabled={uploading}
-                                                onChange={async (e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (!file) return;
-
-                                                    setUploading(true);
-                                                    try {
-                                                        const formData = new FormData();
-                                                        formData.append('image', file);
-
-                                                        const res = await fetch('/api/upload', {
-                                                            method: 'POST',
-                                                            body: formData
-                                                        });
-
-                                                        if (!res.ok) {
-                                                            const errorData = await res.json();
-                                                            throw new Error(errorData.error || 'Upload failed');
-                                                        }
-
-                                                        const data = await res.json();
-                                                        setEditForm({
-                                                            ...editForm,
-                                                            imageUrl: data.url,
-                                                            imageAlt: editForm.imageAlt || `Ilustrasi ${editForm.title}`
-                                                        });
-                                                    } catch (err: any) {
-                                                        alert('Failed to upload: ' + err.message);
-                                                    } finally {
-                                                        setUploading(false);
-                                                        e.target.value = '';
-                                                    }
-                                                }}
-                                            />
-                                        </label>
                                     </div>
-                                    {editForm.imageUrl && (
-                                        <div className="mt-2 relative rounded-lg overflow-hidden h-32 bg-gray-100">
-                                            <img
-                                                src={editForm.imageUrl}
-                                                alt="Preview"
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23f3f4f6" width="100" height="100"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-size="12">No Image</text></svg>';
-                                                }}
+                                    <div>
+                                        <label className="label">Tags (comma separated)</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.tags}
+                                            onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })}
+                                            className="input"
+                                            placeholder="tag1, tag2, tag3"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label className="label">Featured Image</label>
+                                        <p className="text-xs text-gray-500 mb-2">Recommended: 1200×630px (16:9 ratio) for optimal display</p>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={editForm.imageUrl}
+                                                onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
+                                                className="input flex-1"
+                                                placeholder="https://... or upload"
                                             />
+                                            <label className="btn-secondary flex items-center gap-2 cursor-pointer">
+                                                {uploading ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    <Upload className="w-4 h-4" />
+                                                )}
+                                                <span className="hidden sm:inline">{uploading ? 'Uploading...' : 'Upload'}</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    disabled={uploading}
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+
+                                                        setUploading(true);
+                                                        try {
+                                                            const formData = new FormData();
+                                                            formData.append('image', file);
+
+                                                            const res = await fetch('/api/upload', {
+                                                                method: 'POST',
+                                                                body: formData
+                                                            });
+
+                                                            if (!res.ok) {
+                                                                const errorData = await res.json();
+                                                                throw new Error(errorData.error || 'Upload failed');
+                                                            }
+
+                                                            const data = await res.json();
+                                                            setEditForm({
+                                                                ...editForm,
+                                                                imageUrl: data.url,
+                                                                imageAlt: editForm.imageAlt || `Ilustrasi ${editForm.title}`
+                                                            });
+                                                        } catch (err: any) {
+                                                            alert('Failed to upload: ' + err.message);
+                                                        } finally {
+                                                            setUploading(false);
+                                                            e.target.value = '';
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
                                         </div>
-                                    )}
+                                        {editForm.imageUrl && (
+                                            <div className="mt-2 relative rounded-lg overflow-hidden h-32 bg-gray-100">
+                                                <img
+                                                    src={editForm.imageUrl}
+                                                    alt="Preview"
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23f3f4f6" width="100" height="100"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-size="12">No Image</text></svg>';
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="label">Image Alt Text</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.imageAlt}
+                                            onChange={(e) => setEditForm({ ...editForm, imageAlt: e.target.value })}
+                                            className="input"
+                                            placeholder="Describe the image..."
+                                        />
+                                    </div>
                                 </div>
                                 <div>
-                                    <label className="label">Image Alt Text</label>
+                                    <label className="label">Meta Description</label>
                                     <input
                                         type="text"
-                                        value={editForm.imageAlt}
-                                        onChange={(e) => setEditForm({ ...editForm, imageAlt: e.target.value })}
+                                        value={editForm.metaDescription}
+                                        onChange={(e) => setEditForm({ ...editForm, metaDescription: e.target.value })}
                                         className="input"
-                                        placeholder="Describe the image..."
+                                        maxLength={160}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">{editForm.metaDescription.length}/160</p>
+                                </div>
+                                <div>
+                                    <label className="label">Content</label>
+                                    <ReactQuill
+                                        value={editForm.contentHtml}
+                                        onChange={(value) => setEditForm({ ...editForm, contentHtml: value })}
+                                        modules={quillModules}
+                                        theme="snow"
+                                        className="bg-white rounded-lg"
                                     />
                                 </div>
                             </div>
-                            <div>
-                                <label className="label">Meta Description</label>
-                                <input
-                                    type="text"
-                                    value={editForm.metaDescription}
-                                    onChange={(e) => setEditForm({ ...editForm, metaDescription: e.target.value })}
-                                    className="input"
-                                    maxLength={160}
-                                />
-                                <p className="text-xs text-gray-500 mt-1">{editForm.metaDescription.length}/160</p>
-                            </div>
-                            <div>
-                                <label className="label">Content</label>
-                                <ReactQuill
-                                    value={editForm.contentHtml}
-                                    onChange={(value) => setEditForm({ ...editForm, contentHtml: value })}
-                                    modules={quillModules}
-                                    theme="snow"
-                                    className="bg-white rounded-lg"
+                            {/* SEO Analysis Sidebar */}
+                            <div className="w-80 border-l border-gray-200 bg-gray-50 p-4 overflow-auto hidden lg:block">
+                                <SeoScorePanel
+                                    title={editForm.title}
+                                    metaDescription={editForm.metaDescription}
+                                    contentHtml={editForm.contentHtml}
+                                    imageAlt={editForm.imageAlt}
+                                    keyword={editForm.mainKeyword}
                                 />
                             </div>
                         </div>
