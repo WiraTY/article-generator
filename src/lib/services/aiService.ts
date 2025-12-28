@@ -92,14 +92,40 @@ interface Article {
 
 /**
  * Build the standard prompt for article generation
+ * @param useCustomOnly - If true and customPrompt is provided, use only the custom prompt
  */
-function buildArticlePrompt(keyword: string, intent: string, customPrompt: string, productKnowledge: string): string {
+function buildArticlePrompt(keyword: string, intent: string, customPrompt: string, productKnowledge: string, useCustomOnly: boolean = false): string {
+    // If useCustomOnly mode and custom prompt is provided, use it as the entire prompt
+    if (useCustomOnly && customPrompt && customPrompt.trim()) {
+        // Replace placeholders in custom prompt
+        let prompt = customPrompt
+            .replace(/\{keyword\}/gi, keyword)
+            .replace(/\{intent\}/gi, intent);
+
+        // Add product knowledge if available
+        if (productKnowledge) {
+            prompt += `\n\n**Product Knowledge (gunakan informasi ini dalam artikel):**\n${productKnowledge}`;
+        }
+
+        // Add JSON output format reminder
+        prompt += `\n\n**FORMAT OUTPUT (WAJIB):**
+Return ONLY a valid JSON object:
+{
+  "title": "Judul artikel",
+  "meta_description": "Deskripsi meta 120-160 karakter",
+  "tags": ["tag1", "tag2"],
+  "content_html": "<h2>...</h2><p>...</p>"
+}`;
+        return prompt;
+    }
+
     const productSection = productKnowledge
         ? `\n**IMPORTANT - Product Knowledge (use this factual information in the article):**\n${productKnowledge}\n`
         : '';
 
+    // Integrate custom prompt as content/style guidance, not as a separate instruction
     const customSection = customPrompt
-        ? `\n**Additional Instructions:**\n${customPrompt}\n`
+        ? `\n**Content Improvement Notes (apply these when writing the article):**\n${customPrompt}\n`
         : '';
 
     return `You are an expert Content Writer using E-E-A-T standards. Write a comprehensive article for the keyword: "${keyword}".
@@ -127,32 +153,52 @@ ${productSection}${customSection}
 2. **Short Paragraphs:** Maximum 3 sentences per paragraph. Keep paragraphs under 100 words.
 3. **Use Active Voice:** Minimize passive voice (avoid "di-", "ter-", "ke-...-an" patterns in Indonesian).
 4. **Transition Words:** Start paragraphs with transition words like: "Selain itu,", "Namun,", "Jadi,", "Nah,", "Pertama,", "Selanjutnya,", "Karena itu,", "Meskipun,", etc.
-5. **Content Length:** Write 800-1000 words total.
+5. **Content Length:** Write 800-1200 words total.
 
 **Strict Guidelines:**
 1. **Title:** Create a catchy H1 title that contains the keyword "${keyword}". Make it compelling and click-worthy. PLAIN TEXT ONLY, no HTML tags.
 2. **Format:** Use HTML tags ONLY (<h2>, <h3>, <p>, <ul>, <li>, <strong>, <a>) for content_html. DO NOT use markdown. DO NOT use <html>, <head>, or <body> tags.
 3. **IMPORTANT - Links/Anchor Text:** If you include links, ALWAYS use proper HTML anchor format: <a href="https://example.com">anchor text</a>. NEVER use wiki-style [url|text] or markdown [text](url) format.
 4. **Introduction:** Mention "${keyword}" naturally in the first paragraph. Hook the reader immediately.
-5. **Body:** Write 800-1000 words. Keep paragraphs short (3 sentences max). Use bullet points for lists. Use <strong> for important terms.
+5. **Body:** Write 800-1200 words. Keep paragraphs short (3 sentences max). Use bullet points for lists. Use <strong> for important terms.
 6. **Structure:** Use <h2> for main sections and <h3> for subsections. Create at least 4-5 main sections.
 7. **Meta Description:** MUST be PLAIN TEXT ONLY (no HTML tags like <strong>, <p>, etc). 120-160 characters. Include the keyword naturally. Keep it casual too!
 8. **Tags:** Generate 3-5 relevant tags/labels for this article. Tags should be short (1-2 words each), lowercase, and relevant to the content.
 
-Return ONLY a valid JSON object with no additional text. Format:
+**CRITICAL OUTPUT FORMAT - YOU MUST FOLLOW THIS EXACTLY:**
+Return ONLY a valid JSON object. No explanations, no apologies, no extra text. Just the JSON:
 {
   "title": "Your compelling title here (plain text, no HTML)",
   "meta_description": "Your meta description here - PLAIN TEXT ONLY, 120-160 chars, NO HTML TAGS",
   "tags": ["tag1", "tag2", "tag3"],
   "content_html": "<h2>First Section</h2><p>Content here...</p>..."
-}`;
 }
+
+REMINDER: Your entire response must be valid JSON only. Do not include any text before or after the JSON object.`;
+}
+
 
 
 /**
  * Build the standard prompt for keyword generation
  */
-function buildKeywordPrompt(seedKeyword: string): string {
+function buildKeywordPrompt(seedKeyword: string, customPrompt?: string): string {
+    // JSON format instruction that's always appended
+    const jsonFormatInstruction = `
+
+**FORMAT OUTPUT (WAJIB - HARUS DIIKUTI):**
+Return ONLY a valid JSON Array. No explanations, no apologies, no extra text. Just the JSON array:
+[{ "term": "keyword here", "intent": "informational" }, { "term": "another keyword", "intent": "transactional" }]
+
+The intent must be lowercase: either "informational" or "transactional".
+REMINDER: Your entire response must be valid JSON array only. Do not include any text before or after the JSON.`;
+
+    // If custom prompt provided, use it + append JSON format
+    if (customPrompt && customPrompt.trim()) {
+        const prompt = customPrompt.replace(/\{keyword\}/gi, seedKeyword).replace(/\{seed\}/gi, seedKeyword);
+        return prompt + jsonFormatInstruction;
+    }
+
     return `Act as an SEO Strategist. Analyze the seed keyword provided: "${seedKeyword}".
 
 Generate 10 high-potential long-tail keywords relevant to the seed. For each keyword, determine the User Search Intent (Informational or Transactional).
@@ -164,15 +210,51 @@ The intent must be lowercase: either "informational" or "transactional".`;
 }
 
 /**
- * Extract JSON from AI response (handle markdown code blocks)
+ * Extract JSON from AI response (handle markdown code blocks and edge cases)
  */
 function extractJson(text: string): string {
-    let jsonStr = text;
+    let jsonStr = text.trim();
+
+    // Try to extract from markdown code blocks first
     if (text.includes('```json')) {
         jsonStr = text.split('```json')[1].split('```')[0].trim();
     } else if (text.includes('```')) {
         jsonStr = text.split('```')[1].split('```')[0].trim();
     }
+
+    // If response starts with HTML or non-JSON, try to find JSON object
+    if (jsonStr.startsWith('<') || jsonStr.startsWith('Maaf') || jsonStr.startsWith('Sorry')) {
+        // Try to find a JSON object in the text
+        const jsonMatch = text.match(/\{[\s\S]*"title"[\s\S]*"content_html"[\s\S]*\}/);
+        if (jsonMatch) {
+            jsonStr = jsonMatch[0];
+        } else {
+            throw new Error('AI response is not valid JSON. Please try again. Response started with: ' + jsonStr.substring(0, 50));
+        }
+    }
+
+    // Clean up any leading/trailing non-JSON characters
+    const firstBrace = jsonStr.indexOf('{');
+    const firstBracket = jsonStr.indexOf('[');
+    const startIndex = firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket) ? firstBrace : firstBracket;
+
+    if (startIndex > 0) {
+        jsonStr = jsonStr.substring(startIndex);
+    }
+
+    // Find the matching closing brace/bracket
+    if (jsonStr.startsWith('{')) {
+        const lastBrace = jsonStr.lastIndexOf('}');
+        if (lastBrace !== -1) {
+            jsonStr = jsonStr.substring(0, lastBrace + 1);
+        }
+    } else if (jsonStr.startsWith('[')) {
+        const lastBracket = jsonStr.lastIndexOf(']');
+        if (lastBracket !== -1) {
+            jsonStr = jsonStr.substring(0, lastBracket + 1);
+        }
+    }
+
     return jsonStr;
 }
 
@@ -199,19 +281,19 @@ function postProcessArticle(article: Article): Article {
 
 // ==================== GEMINI PROVIDER ====================
 
-async function generateKeywordsWithGemini(seedKeyword: string): Promise<Keyword[]> {
+async function generateKeywordsWithGemini(seedKeyword: string, customPrompt?: string): Promise<Keyword[]> {
     const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
-    const result = await model.generateContent(buildKeywordPrompt(seedKeyword));
+    const result = await model.generateContent(buildKeywordPrompt(seedKeyword, customPrompt));
     const response = await result.response;
     const text = response.text();
     return JSON.parse(extractJson(text));
 }
 
 async function generateArticleWithGemini(
-    keyword: string, intent: string, customPrompt: string, productKnowledge: string
+    keyword: string, intent: string, customPrompt: string, productKnowledge: string, useCustomOnly: boolean = false
 ): Promise<Article> {
     const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
-    const result = await model.generateContent(buildArticlePrompt(keyword, intent, customPrompt, productKnowledge));
+    const result = await model.generateContent(buildArticlePrompt(keyword, intent, customPrompt, productKnowledge, useCustomOnly));
     const response = await result.response;
     const text = response.text();
     return postProcessArticle(JSON.parse(extractJson(text)));
@@ -219,13 +301,13 @@ async function generateArticleWithGemini(
 
 // ==================== Z.AI PROVIDER ====================
 
-async function generateKeywordsWithZai(seedKeyword: string): Promise<Keyword[]> {
+async function generateKeywordsWithZai(seedKeyword: string, customPrompt?: string): Promise<Keyword[]> {
     const client = getZaiClient();
     const completion = await client.chat.completions.create({
         model: 'glm-4.7',
         messages: [
             { role: 'system', content: 'You are an SEO expert. You MUST respond with ONLY a valid JSON array, no explanations or additional text.' },
-            { role: 'user', content: buildKeywordPrompt(seedKeyword) }
+            { role: 'user', content: buildKeywordPrompt(seedKeyword, customPrompt) }
         ],
         temperature: 0.7
     });
@@ -240,7 +322,7 @@ async function generateKeywordsWithZai(seedKeyword: string): Promise<Keyword[]> 
 }
 
 async function generateArticleWithZai(
-    keyword: string, intent: string, customPrompt: string, productKnowledge: string
+    keyword: string, intent: string, customPrompt: string, productKnowledge: string, useCustomOnly: boolean = false
 ): Promise<Article> {
     const client = getZaiClient();
     const completion = await client.chat.completions.create({
@@ -253,7 +335,7 @@ CRITICAL: Your entire response must be ONLY the JSON object - no text before or 
 The JSON must have these exact keys: "title", "meta_description", "tags", "content_html".
 Do not include any explanations, markdown formatting, or code blocks. Just pure JSON.`
             },
-            { role: 'user', content: buildArticlePrompt(keyword, intent, customPrompt, productKnowledge) }
+            { role: 'user', content: buildArticlePrompt(keyword, intent, customPrompt, productKnowledge, useCustomOnly) }
         ],
         temperature: 0.5,  // Lower for more consistent JSON output
         response_format: { type: 'json_object' }  // Force JSON mode
@@ -273,17 +355,19 @@ Do not include any explanations, markdown formatting, or code blocks. Just pure 
 
 /**
  * Generate long-tail keywords from a seed keyword
+ * @param seedKeyword - The seed keyword to generate variations from
+ * @param customPrompt - Optional custom prompt (replaces default if provided)
  */
-export async function generateKeywords(seedKeyword: string): Promise<Keyword[]> {
+export async function generateKeywords(seedKeyword: string, customPrompt?: string): Promise<Keyword[]> {
     try {
         const provider = await getAIProvider();
 
         if (provider === 'zai' && ZAI_API_KEY) {
             console.log('Using Z.AI for keyword generation');
-            return await generateKeywordsWithZai(seedKeyword);
+            return await generateKeywordsWithZai(seedKeyword, customPrompt);
         } else {
             console.log('Using Gemini for keyword generation');
-            return await generateKeywordsWithGemini(seedKeyword);
+            return await generateKeywordsWithGemini(seedKeyword, customPrompt);
         }
     } catch (error: any) {
         console.error('Error generating keywords:', error);
@@ -293,22 +377,24 @@ export async function generateKeywords(seedKeyword: string): Promise<Keyword[]> 
 
 /**
  * Generate an SEO-optimized article for a keyword
+ * @param useCustomOnly - If true, use customPrompt as the entire prompt (replaces default)
  */
 export async function generateArticle(
     keyword: string,
     intent: string,
     customPrompt: string = '',
-    productKnowledge: string = ''
+    productKnowledge: string = '',
+    useCustomOnly: boolean = false
 ): Promise<Article> {
     try {
         const provider = await getAIProvider();
 
         if (provider === 'zai' && ZAI_API_KEY) {
             console.log('Using Z.AI for article generation');
-            return await generateArticleWithZai(keyword, intent, customPrompt, productKnowledge);
+            return await generateArticleWithZai(keyword, intent, customPrompt, productKnowledge, useCustomOnly);
         } else {
             console.log('Using Gemini for article generation');
-            return await generateArticleWithGemini(keyword, intent, customPrompt, productKnowledge);
+            return await generateArticleWithGemini(keyword, intent, customPrompt, productKnowledge, useCustomOnly);
         }
     } catch (error: any) {
         console.error('Error generating article:', error);

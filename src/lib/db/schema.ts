@@ -59,3 +59,19 @@ export const settings = sqliteTable('settings', {
     updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
+// Generation Jobs table - stores background article generation jobs
+export const generationJobs = sqliteTable('generation_jobs', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    jobType: text('job_type').notNull().default('generate'), // 'generate' or 'regenerate'
+    keywordId: integer('keyword_id').references(() => keywords.id),
+    keyword: text('keyword').notNull(),
+    intent: text('intent').notNull(),
+    customPrompt: text('custom_prompt'),
+    useCustomOnly: integer('use_custom_only', { mode: 'boolean' }).default(false), // Use custom prompt as entire prompt
+    articleSlug: text('article_slug'), // For regenerate jobs - which article to update
+    status: text('status').notNull().default('pending'), // 'pending', 'processing', 'completed', 'failed', 'cancelled'
+    articleId: integer('article_id').references(() => articles.id),
+    error: text('error'),
+    createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
+    updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
+});

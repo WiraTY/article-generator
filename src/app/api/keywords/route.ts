@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
 
         // If seedKeyword is provided, research keywords
         if (body.seedKeyword) {
-            const { seedKeyword } = body;
-            const generatedKeywords = await generateKeywords(seedKeyword);
+            const { seedKeyword, customPrompt } = body;
+            const generatedKeywords = await generateKeywords(seedKeyword, customPrompt);
             return NextResponse.json(generatedKeywords);
         }
 
@@ -77,6 +77,12 @@ export async function DELETE(request: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (error: any) {
         console.error('Delete keyword error:', error);
+        if (error.message?.includes('FOREIGN KEY constraint failed')) {
+            return NextResponse.json(
+                { error: 'Gagal menghapus: Keyword ini sudah memiliki artikel. Hapus artikelnya terlebih dahulu.' },
+                { status: 409 }
+            );
+        }
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

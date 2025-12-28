@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MessageSquare, Check, X, Trash2, Filter, ExternalLink, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import ConfirmModal from '@/components/ConfirmModal';
+import { useToast } from '@/components/ToastProvider';
 
 interface Comment {
     id: number;
@@ -21,6 +23,22 @@ export default function CommentsPage() {
     const [filter, setFilter] = useState('pending');
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [updating, setUpdating] = useState(false);
+
+    // Modal & Toast
+    const { showToast } = useToast();
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        variant?: 'danger' | 'warning' | 'info';
+        confirmText?: string;
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+    });
 
     useEffect(() => {
         fetchComments();
@@ -51,21 +69,33 @@ export default function CommentsPage() {
             });
             fetchComments();
             setSelectedIds([]);
+            showToast('Comments updated successfully', 'success');
         } catch (e) {
-            alert('Failed to update comments');
+            showToast('Failed to update comments', 'error');
         } finally {
             setUpdating(false);
         }
     }
 
     async function handleDelete(id: number) {
-        if (!confirm('Are you sure you want to delete this comment?')) return;
-        try {
-            await fetch(`/api/comments?id=${id}`, { method: 'DELETE' });
-            fetchComments();
-        } catch (e) {
-            alert('Failed to delete comment');
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Comment',
+            message: 'Are you sure you want to delete this comment? This action cannot be undone.',
+            variant: 'danger',
+            confirmText: 'Delete',
+            onConfirm: async () => {
+                try {
+                    await fetch(`/api/comments?id=${id}`, { method: 'DELETE' });
+                    fetchComments();
+                    showToast('Comment deleted successfully', 'success');
+                } catch (e) {
+                    showToast('Failed to delete comment', 'error');
+                } finally {
+                    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                }
+            }
+        });
     }
 
     function toggleSelect(id: number) {
@@ -120,8 +150,8 @@ export default function CommentsPage() {
                             key={tab}
                             onClick={() => setFilter(tab)}
                             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors capitalize ${filter === tab
-                                    ? 'bg-white text-gray-900 shadow-sm'
-                                    : 'text-gray-600 hover:text-gray-900'
+                                ? 'bg-white text-gray-900 shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900'
                                 }`}
                         >
                             {tab}
@@ -252,6 +282,16 @@ export default function CommentsPage() {
                     </div>
                 </div>
             )}
+            {/* Components */}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                variant={confirmModal.variant}
+                confirmText={confirmModal.confirmText}
+            />
         </div>
     );
 }

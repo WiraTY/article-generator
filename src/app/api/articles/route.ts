@@ -52,12 +52,18 @@ export async function POST(request: NextRequest) {
         // Fetch product knowledge from settings
         let productKnowledge = '';
         try {
-            const pkResult = await db.select().from(settings).where(eq(settings.key, 'productKnowledge'));
-            if (pkResult.length > 0) {
-                productKnowledge = pkResult[0].value;
+            const [pkRes, epkRes] = await Promise.all([
+                db.select().from(settings).where(eq(settings.key, 'productKnowledge')),
+                db.select().from(settings).where(eq(settings.key, 'enableProductKnowledge'))
+            ]);
+
+            const isEnabled = epkRes.length === 0 || epkRes[0].value !== 'disabled';
+
+            if (isEnabled && pkRes.length > 0) {
+                productKnowledge = pkRes[0].value;
             }
         } catch (e) {
-            console.log('No product knowledge found, continuing without it');
+            console.log('Error fetching product knowledge:', e);
         }
 
         // Generate article using AI

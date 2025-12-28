@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Users, Plus, Edit, Trash2, Save, X, Loader2, Shield, PenTool, User } from 'lucide-react';
+import ConfirmModal from '@/components/ConfirmModal';
+import { useToast } from '@/components/ToastProvider';
 
 interface UserData {
     id: number;
@@ -18,6 +20,22 @@ export default function UserManagementPage() {
     const [editingUser, setEditingUser] = useState<UserData | null>(null);
     const [form, setForm] = useState({ email: '', password: '', name: '', role: 'author' });
     const [saving, setSaving] = useState(false);
+
+    // Modal & Toast
+    const { showToast } = useToast();
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        variant?: 'danger' | 'warning' | 'info';
+        confirmText?: string;
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+    });
 
     useEffect(() => {
         fetchUsers();
@@ -65,22 +83,33 @@ export default function UserManagementPage() {
 
             fetchUsers();
             closeModal();
+            showToast(editingUser ? 'User updated successfully' : 'User created successfully', 'success');
         } catch (e) {
-            alert('Failed to save user');
+            showToast('Failed to save user', 'error');
         } finally {
             setSaving(false);
         }
     }
 
     async function handleDelete(id: number) {
-        if (!confirm('Are you sure you want to delete this user?')) return;
-
-        try {
-            await fetch(`/api/users?id=${id}`, { method: 'DELETE' });
-            fetchUsers();
-        } catch (e) {
-            alert('Failed to delete user');
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete User',
+            message: 'Are you sure you want to delete this user? This action cannot be undone.',
+            variant: 'danger',
+            confirmText: 'Delete',
+            onConfirm: async () => {
+                try {
+                    await fetch(`/api/users?id=${id}`, { method: 'DELETE' });
+                    fetchUsers();
+                    showToast('User deleted successfully', 'success');
+                } catch (e) {
+                    showToast('Failed to delete user', 'error');
+                } finally {
+                    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                }
+            }
+        });
     }
 
     function openEditModal(user: UserData) {
@@ -274,6 +303,16 @@ export default function UserManagementPage() {
                     </div>
                 </div>
             )}
+            {/* Components */}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                variant={confirmModal.variant}
+                confirmText={confirmModal.confirmText}
+            />
         </div>
     );
 }

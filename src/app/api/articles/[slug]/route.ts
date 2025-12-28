@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, initializeDatabase } from '@/lib/db';
-import { articles } from '@/lib/db/schema';
+import { articles, comments, generationJobs } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 let initialized = false;
@@ -87,7 +87,14 @@ export async function DELETE(
             return NextResponse.json({ error: 'Article not found' }, { status: 404 });
         }
 
-        await db.delete(articles).where(eq(articles.id, existing[0].id));
+        const articleId = existing[0].id;
+
+        // Delete related records first (cascade manually)
+        await db.delete(comments).where(eq(comments.articleId, articleId));
+        await db.delete(generationJobs).where(eq(generationJobs.articleId, articleId));
+
+        // Now delete the article
+        await db.delete(articles).where(eq(articles.id, articleId));
         return NextResponse.json({ success: true });
     } catch (error: any) {
         console.error('Delete article error:', error);

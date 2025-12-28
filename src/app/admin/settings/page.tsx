@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Settings, Database, Lightbulb, CheckCircle, Save, Loader2, MessageSquare, Share2, Palette, Image, Type, Bot, Zap } from 'lucide-react';
+import { useToast } from '@/components/ToastProvider';
 
 export default function SettingsPage() {
     const [productKnowledge, setProductKnowledge] = useState('');
+    const [enableProductKnowledge, setEnableProductKnowledge] = useState(true);
     const [commentModeration, setCommentModeration] = useState(true);
     const [socialShare, setSocialShare] = useState({ enabled: true, platforms: ['facebook', 'twitter', 'linkedin', 'whatsapp'] });
     const [branding, setBranding] = useState({ appName: 'Article Generator', appIcon: '' });
@@ -13,17 +15,24 @@ export default function SettingsPage() {
     const [saved, setSaved] = useState(false);
     const [loading, setLoading] = useState(true);
 
+    const { showToast } = useToast();
+
     useEffect(() => {
         async function loadSettings() {
             try {
-                const [pkRes, cmRes, ssRes, brRes, aiRes] = await Promise.all([
+                const [pkRes, epkRes, cmRes, ssRes, brRes, aiRes] = await Promise.all([
                     fetch('/api/settings/productKnowledge'),
+                    fetch('/api/settings/enableProductKnowledge'),
                     fetch('/api/settings/commentModeration'),
                     fetch('/api/settings/socialShare'),
                     fetch('/api/settings/branding'),
                     fetch('/api/settings/aiProvider')
                 ]);
                 const pkData = await pkRes.json();
+
+                let epkData = { value: 'enabled' };
+                if (epkRes.ok) epkData = await epkRes.json();
+
                 const cmData = await cmRes.json();
 
                 let ssData = { value: null };
@@ -34,6 +43,7 @@ export default function SettingsPage() {
                 if (aiRes.ok) aiData = await aiRes.json();
 
                 setProductKnowledge(pkData.value || '');
+                setEnableProductKnowledge(epkData.value !== 'disabled');
                 setCommentModeration(cmData.value !== 'disabled');
 
                 if (ssData.value) {
@@ -70,6 +80,11 @@ export default function SettingsPage() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ value: productKnowledge })
                 }),
+                fetch('/api/settings/enableProductKnowledge', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ value: enableProductKnowledge ? 'enabled' : 'disabled' })
+                }),
                 fetch('/api/settings/commentModeration', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -93,8 +108,9 @@ export default function SettingsPage() {
             ]);
             setSaved(true);
             setTimeout(() => setSaved(false), 3000);
+            showToast('Settings saved successfully', 'success');
         } catch (e) {
-            alert('Failed to save');
+            showToast('Failed to save settings', 'error');
         } finally {
             setSaving(false);
         }
@@ -285,12 +301,32 @@ export default function SettingsPage() {
                     </div>
                 </div>
                 <div className="p-6 space-y-4">
-                    <textarea
-                        value={productKnowledge}
-                        onChange={(e) => setProductKnowledge(e.target.value)}
-                        rows={12}
-                        className="input font-mono text-sm"
-                        placeholder={`Enter your product knowledge here. Example:
+                    {/* Enable/Disable Toggle */}
+                    <div className="flex items-center justify-between cursor-pointer group mb-4" onClick={() => setEnableProductKnowledge(!enableProductKnowledge)}>
+                        <div>
+                            <p className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">Use Product Knowledge</p>
+                            <p className="text-sm text-gray-500">
+                                {enableProductKnowledge
+                                    ? 'AI will use the information below to improve accuracy'
+                                    : 'AI will generate generic content without specific product details'}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${enableProductKnowledge ? 'bg-purple-600' : 'bg-gray-200'}`}
+                        >
+                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${enableProductKnowledge ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </button>
+                    </div>
+
+                    {enableProductKnowledge && (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <textarea
+                                value={productKnowledge}
+                                onChange={(e) => setProductKnowledge(e.target.value)}
+                                rows={12}
+                                className="input font-mono text-sm"
+                                placeholder={`Enter your product knowledge here. Example:
 
 ## Our Company
 - Company Name: XYZ Corp
@@ -303,11 +339,13 @@ export default function SettingsPage() {
 ## Key Facts
 - 10,000+ students
 - 95% satisfaction rate`}
-                    />
-                    <p className="text-sm text-gray-500 flex items-start gap-1.5">
-                        <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                        The AI will reference this for accurate product details in articles.
-                    </p>
+                            />
+                            <p className="text-sm text-gray-500 flex items-start gap-1.5">
+                                <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                                The AI will reference this for accurate product details in articles.
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
 

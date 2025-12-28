@@ -33,9 +33,15 @@ export async function POST(
         // Fetch product knowledge from settings
         let productKnowledge = '';
         try {
-            const pkResult = await db.select().from(settings).where(eq(settings.key, 'productKnowledge'));
-            if (pkResult.length > 0) {
-                productKnowledge = pkResult[0].value;
+            const [pkRes, epkRes] = await Promise.all([
+                db.select().from(settings).where(eq(settings.key, 'productKnowledge')),
+                db.select().from(settings).where(eq(settings.key, 'enableProductKnowledge'))
+            ]);
+
+            const isEnabled = epkRes.length === 0 || epkRes[0].value !== 'disabled';
+
+            if (isEnabled && pkRes.length > 0) {
+                productKnowledge = pkRes[0].value;
             }
         } catch (e) {
             console.log('No product knowledge found');
@@ -49,11 +55,18 @@ export async function POST(
             productKnowledge
         );
 
-        // Save current content to previousContentHtml for undo
-        // Then update with new content
+        // Save previous data as JSON for complete undo
+        const previousData = JSON.stringify({
+            contentHtml: article.contentHtml,
+            title: article.title,
+            metaDescription: article.metaDescription,
+            tags: article.tags
+        });
+
+        // Update with new content
         const result = await db.update(articles)
             .set({
-                previousContentHtml: article.contentHtml, // Save current for undo
+                previousContentHtml: previousData, // Store JSON with all fields
                 contentHtml: generatedArticle.content_html,
                 title: generatedArticle.title,
                 metaDescription: generatedArticle.meta_description,

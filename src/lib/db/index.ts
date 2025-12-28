@@ -89,9 +89,25 @@ export async function initializeDatabase() {
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS generation_jobs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      job_type TEXT NOT NULL DEFAULT 'generate',
+      keyword_id INTEGER REFERENCES keywords(id),
+      keyword TEXT NOT NULL,
+      intent TEXT NOT NULL,
+      custom_prompt TEXT,
+      article_slug TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      article_id INTEGER REFERENCES articles(id),
+      error TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_articles_slug ON articles(slug);
     CREATE INDEX IF NOT EXISTS idx_keywords_status ON keywords(status);
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+    CREATE INDEX IF NOT EXISTS idx_jobs_status ON generation_jobs(status);
   `);
 
   // Step 2: Run migrations to add new columns (ignore errors if column exists)
@@ -101,6 +117,9 @@ export async function initializeDatabase() {
     `ALTER TABLE comments ADD COLUMN approved_at TEXT`,
     `ALTER TABLE articles ADD COLUMN author_id INTEGER`,
     `ALTER TABLE articles ADD COLUMN previous_content_html TEXT`,
+    `ALTER TABLE generation_jobs ADD COLUMN job_type TEXT DEFAULT 'generate'`,
+    `ALTER TABLE generation_jobs ADD COLUMN article_slug TEXT`,
+    `ALTER TABLE generation_jobs ADD COLUMN use_custom_only INTEGER DEFAULT 0`,
   ];
 
   for (const migration of migrations) {
