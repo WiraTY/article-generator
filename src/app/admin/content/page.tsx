@@ -8,6 +8,7 @@ import SeoScorePanel from '@/components/SeoScorePanel';
 import { useJobs } from '@/components/JobNotificationProvider';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useToast } from '@/components/ToastProvider';
+import ImageUploader from '@/components/ImageUploader';
 
 // Dynamic import for rich text editor (client-side only)
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
@@ -605,73 +606,18 @@ export default function ContentManagerPage() {
                                                     <div>
                                                         <label className="label">Featured Image</label>
                                                         <p className="text-xs text-gray-500 mb-2">Recommended: 1200×630px (16:9 ratio) for optimal display</p>
-                                                        <div className="flex gap-2">
-                                                            <input
-                                                                type="text"
-                                                                value={editForm.imageUrl}
-                                                                onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
-                                                                className="input flex-1"
-                                                                placeholder="https://... or upload"
+                                                        <div className="mt-1">
+                                                            <ImageUploader
+                                                                value={editForm.imageUrl || ""}
+                                                                onChange={(url) => setEditForm(prev => ({
+                                                                    ...prev,
+                                                                    imageUrl: url,
+                                                                    // Only set alt if not already set and we just got an image
+                                                                    imageAlt: prev.imageAlt || (url ? `Ilustrasi ${prev.title}` : "")
+                                                                }))}
                                                             />
-                                                            <label className="btn-secondary flex items-center gap-2 cursor-pointer">
-                                                                {uploading ? (
-                                                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                                                ) : (
-                                                                    <Upload className="w-4 h-4" />
-                                                                )}
-                                                                <span className="hidden sm:inline">{uploading ? 'Uploading...' : 'Upload'}</span>
-                                                                <input
-                                                                    type="file"
-                                                                    accept="image/*"
-                                                                    className="hidden"
-                                                                    disabled={uploading}
-                                                                    onChange={async (e) => {
-                                                                        const file = e.target.files?.[0];
-                                                                        if (!file) return;
-
-                                                                        setUploading(true);
-                                                                        try {
-                                                                            const formData = new FormData();
-                                                                            formData.append('image', file);
-
-                                                                            const res = await fetch('/api/upload', {
-                                                                                method: 'POST',
-                                                                                body: formData
-                                                                            });
-
-                                                                            if (!res.ok) {
-                                                                                const errorData = await res.json();
-                                                                                throw new Error(errorData.error || 'Upload failed');
-                                                                            }
-
-                                                                            const data = await res.json();
-                                                                            setEditForm({
-                                                                                ...editForm,
-                                                                                imageUrl: data.url,
-                                                                                imageAlt: editForm.imageAlt || `Ilustrasi ${editForm.title}`
-                                                                            });
-                                                                        } catch (err: any) {
-                                                                            showToast('Failed to upload: ' + err.message, 'error');
-                                                                        } finally {
-                                                                            setUploading(false);
-                                                                            e.target.value = '';
-                                                                        }
-                                                                    }}
-                                                                />
-                                                            </label>
                                                         </div>
-                                                        {editForm.imageUrl && (
-                                                            <div className="mt-2 relative rounded-lg overflow-hidden h-32 bg-gray-100">
-                                                                <img
-                                                                    src={editForm.imageUrl}
-                                                                    alt="Preview"
-                                                                    className="w-full h-full object-cover"
-                                                                    onError={(e) => {
-                                                                        (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23f3f4f6" width="100" height="100"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-size="12">No Image</text></svg>';
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        )}
+                                                        {/* Preview removed as ImageUploader handles it internally */}
                                                     </div>
                                                     <div>
                                                         <label className="label">Image Alt Text</label>
