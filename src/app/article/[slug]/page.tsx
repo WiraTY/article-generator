@@ -8,6 +8,7 @@ import { eq, desc } from 'drizzle-orm';
 import CommentsSection from './CommentsSection';
 import SocialShare from './SocialShare';
 import FloatingNav from './FloatingNav';
+import ViewTracker from '@/components/ViewTracker';
 import { ArrowLeft, Calendar, User, Tag, BookOpen, Clock, LogIn, LayoutDashboard } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -329,6 +330,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
             {/* Floating Navigation - TOC (mobile) + Back to Top */}
             <FloatingNav toc={toc} />
+
+            {/* View Tracker (Client Component) */}
+            <ViewTracker id={article.id} slug={article.slug} />
 
             {/* Footer */}
             <footer className="mt-auto border-t border-gray-100 py-12 bg-gray-50">

@@ -37,6 +37,7 @@ export const articles = sqliteTable('articles', {
     imageAlt: text('image_alt'), // Custom alt text for image
     author: text('author'),
     publishedAt: integer('published_at', { mode: 'timestamp' }),
+    views: integer('views').default(0).notNull(),
 });
 
 // Comments table - stores article comments with moderation
