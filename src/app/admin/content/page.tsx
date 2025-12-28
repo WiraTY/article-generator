@@ -9,6 +9,7 @@ import { useJobs } from '@/components/JobNotificationProvider';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useToast } from '@/components/ToastProvider';
 import ImageUploader from '@/components/ImageUploader';
+import { analyzeSEO, analyzeReadability } from '@/lib/services/seoAnalyzer';
 
 // Dynamic import for rich text editor (client-side only)
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
@@ -487,20 +488,45 @@ export default function ContentManagerPage() {
                                 ) : (
                                     <div className="divide-y divide-gray-100">
                                         {articles.map((article) => (
-                                            <div key={article.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 group">
-                                                <div className="flex-1 min-w-0">
-                                                    <Link href={`/article/${article.slug}`} target="_blank" className="font-medium text-gray-900 hover:text-blue-600 block truncate">
+                                            <div key={article.id} className="px-4 py-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between hover:bg-gray-50 group gap-4 md:gap-0">
+                                                <div className="flex-1 min-w-0 pr-0 md:pr-4">
+                                                    <Link href={`/article/${article.slug}`} target="_blank" className="font-medium text-gray-900 hover:text-blue-600 block truncate text-base md:text-lg">
                                                         {article.title}
                                                     </Link>
-                                                    <p className="text-sm text-gray-500 truncate">{article.metaDescription}</p>
+                                                    <p className="text-sm text-gray-500 truncate mt-0.5">{article.metaDescription}</p>
                                                     {article.mainKeyword && (
-                                                        <span className="text-xs text-blue-600 flex items-center gap-1 mt-1">
+                                                        <span className="text-xs text-blue-600 flex items-center gap-1 mt-2">
                                                             <Target className="w-3 h-3" />
                                                             {article.mainKeyword}
                                                         </span>
                                                     )}
+                                                    {/* SEO & Readability Scores */}
+                                                    {(() => {
+                                                        const seoResult = article.mainKeyword ? analyzeSEO(
+                                                            { title: article.title, metaDescription: article.metaDescription, contentHtml: article.contentHtml || '', imageAlt: article.imageAlt },
+                                                            article.mainKeyword
+                                                        ) : null;
+                                                        const readResult = analyzeReadability(article.contentHtml || '');
+                                                        const getColorClass = (status: 'good' | 'ok' | 'bad') => {
+                                                            if (status === 'good') return 'bg-green-100 text-green-700';
+                                                            if (status === 'ok') return 'bg-yellow-100 text-yellow-700';
+                                                            return 'bg-red-100 text-red-700';
+                                                        };
+                                                        return (
+                                                            <div className="flex flex-wrap items-center gap-2 mt-3">
+                                                                {seoResult && (
+                                                                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getColorClass(seoResult.status)}`} title={seoResult.checks.map(c => `${c.passed ? '✓' : '✗'} ${c.label}`).join('\n')}>
+                                                                        SEO: {seoResult.percentage}%
+                                                                    </span>
+                                                                )}
+                                                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getColorClass(readResult.status)}`} title={readResult.checks.map(c => `${c.passed ? '✓' : '✗'} ${c.label}`).join('\n')}>
+                                                                    Readability: {readResult.percentage}%
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </div>
-                                                <div className="flex items-center gap-1.5 ml-4">
+                                                <div className="flex items-center gap-2 self-end md:self-auto w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-gray-100 mt-2 md:mt-0">
                                                     <Link
                                                         href={`/article/${article.slug}`}
                                                         target="_blank"

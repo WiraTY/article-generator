@@ -23,6 +23,7 @@ export async function GET() {
             title: articles.title,
             slug: articles.slug,
             metaDescription: articles.metaDescription,
+            contentHtml: articles.contentHtml,
             mainKeyword: articles.mainKeyword,
             tags: articles.tags,
             author: articles.author,
