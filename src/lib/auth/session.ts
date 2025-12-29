@@ -17,7 +17,18 @@ export async function getSession(): Promise<SessionUser | null> {
     }
 
     try {
-        return JSON.parse(sessionCookie.value) as SessionUser;
+        const { verifySession } = await import('./jwt');
+        const payload = await verifySession(sessionCookie.value);
+
+        if (!payload) return null;
+
+        return {
+            userId: payload.userId,
+            email: payload.email,
+            name: payload.name,
+            role: payload.role,
+            token: sessionCookie.value // Keep the JWT as the token reference
+        };
     } catch {
         return null;
     }

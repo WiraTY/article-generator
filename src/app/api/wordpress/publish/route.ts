@@ -41,6 +41,50 @@ export async function POST(req: Request) {
             }
         }
 
+        // Wrap content in responsive container to prevent horizontal overflow on mobile
+        const responsiveStyles = `
+            <style>
+                .article-content-wrapper * {
+                    max-width: 100% !important;
+                    box-sizing: border-box !important;
+                }
+                .article-content-wrapper {
+                    word-wrap: break-word !important;
+                    overflow-wrap: break-word !important;
+                    hyphens: auto !important;
+                }
+                .article-content-wrapper img {
+                    height: auto !important;
+                }
+                .article-content-wrapper pre,
+                .article-content-wrapper code {
+                    white-space: pre-wrap !important;
+                    word-break: break-word !important;
+                    overflow-x: auto !important;
+                }
+                .article-content-wrapper table {
+                    display: block !important;
+                    overflow-x: auto !important;
+                    width: 100% !important;
+                }
+                .article-content-wrapper h1,
+                .article-content-wrapper h2,
+                .article-content-wrapper h3,
+                .article-content-wrapper h4,
+                .article-content-wrapper h5,
+                .article-content-wrapper h6,
+                .article-content-wrapper p,
+                .article-content-wrapper li,
+                .article-content-wrapper blockquote {
+                    word-wrap: break-word !important;
+                    overflow-wrap: break-word !important;
+                }
+            </style>
+            <div class="article-content-wrapper">${finalContent}</div>
+        `.trim();
+
+        finalContent = responsiveStyles;
+
         const result = await createPost(config, {
             title: article.title,
             content: finalContent,

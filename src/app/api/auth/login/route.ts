@@ -5,10 +5,7 @@ import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 
-// Simple session token generation
-function generateToken(): string {
-    return Math.random().toString(36).substring(2) + Date.now().toString(36);
-}
+// JWT implementation handles token generation
 
 export async function POST(request: NextRequest) {
     await initializeDatabase();
@@ -38,21 +35,21 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'You do not have admin access' }, { status: 403 });
         }
 
-        // Generate session token
-        const token = generateToken();
-
-        // Create session data (stored in cookie)
-        const sessionData = JSON.stringify({
+        // Generate session payload
+        const payload = {
             userId: user[0].id,
             email: user[0].email,
             name: user[0].name,
-            role: user[0].role,
-            token: token
-        });
+            role: user[0].role as 'super_admin' | 'author' | 'user'
+        };
+
+        // Sign the session using JWT
+        const { signSession } = await import('@/lib/auth/jwt');
+        const sessionToken = await signSession(payload);
 
         // Set HTTP-only cookie
         const cookieStore = await cookies();
-        cookieStore.set('admin_session', sessionData, {
+        cookieStore.set('admin_session', sessionToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
