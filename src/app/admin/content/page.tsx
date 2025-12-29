@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { FileText, Clock, Sparkles, Loader2, Edit, Trash2, Save, Eye, Target, X, Upload, RefreshCw, Undo2, CheckCircle, Plus, List } from 'lucide-react';
+import { FileText, Clock, Sparkles, Loader2, Edit, Trash2, Save, Eye, Target, X, Upload, RefreshCw, Undo2, CheckCircle, Plus, List, Globe, Send } from 'lucide-react';
 import SeoScorePanel from '@/components/SeoScorePanel';
 import { useJobs } from '@/components/JobNotificationProvider';
 import ConfirmModal from '@/components/ConfirmModal';
@@ -58,6 +58,9 @@ export default function ContentManagerPage() {
     const [customPrompts, setCustomPrompts] = useState<Record<number, string>>({});
     const [regeneratingSlug, setRegeneratingSlug] = useState<string | null>(null);
     const [regenerateModal, setRegenerateModal] = useState<{ slug: string; keyword: string } | null>(null);
+    const [publishModal, setPublishModal] = useState<{ slug: string; title: string } | null>(null);
+    const [publishing, setPublishing] = useState(false);
+    const [publishStatus, setPublishStatus] = useState<'draft' | 'publish'>('draft');
     const [regeneratePrompt, setRegeneratePrompt] = useState('');
     const [useCustomOnly, setUseCustomOnly] = useState(false);
     const [undoingSlug, setUndoingSlug] = useState<string | null>(null);
@@ -316,6 +319,32 @@ export default function ContentManagerPage() {
         }
     }
 
+    async function handlePublishToWP() {
+        if (!publishModal) return;
+        setPublishing(true);
+        try {
+            const res = await fetch('/api/wordpress/publish', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    articleSlug: publishModal.slug,
+                    status: publishStatus
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast('Published to WordPress successfully! 🚀', 'success');
+                setPublishModal(null);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (e: any) {
+            showToast('Failed to publish: ' + e.message, 'error');
+        } finally {
+            setPublishing(false);
+        }
+    }
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -489,15 +518,15 @@ export default function ContentManagerPage() {
                                     <div className="divide-y divide-gray-100">
                                         {articles.map((article) => (
                                             <div key={article.id} className="px-4 py-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between hover:bg-gray-50 group gap-4 md:gap-0">
-                                                <div className="flex-1 min-w-0 pr-0 md:pr-4">
-                                                    <Link href={`/article/${article.slug}`} target="_blank" className="font-medium text-gray-900 hover:text-blue-600 block truncate text-base md:text-lg">
+                                                <div className="flex-1 w-full min-w-0 pr-0 md:pr-4">
+                                                    <Link href={`/article/${article.slug}`} target="_blank" className="font-medium text-gray-900 hover:text-blue-600 block text-base md:text-lg break-words leading-tight">
                                                         {article.title}
                                                     </Link>
-                                                    <p className="text-sm text-gray-500 truncate mt-0.5">{article.metaDescription}</p>
+                                                    <p className="text-sm text-gray-500 mt-1 break-words line-clamp-2 md:truncate">{article.metaDescription}</p>
                                                     {article.mainKeyword && (
                                                         <span className="text-xs text-blue-600 flex items-center gap-1 mt-2">
-                                                            <Target className="w-3 h-3" />
-                                                            {article.mainKeyword}
+                                                            <Target className="w-3 h-3 flex-shrink-0" />
+                                                            <span className="break-all">{article.mainKeyword}</span>
                                                         </span>
                                                     )}
                                                     {/* SEO & Readability Scores */}
@@ -526,25 +555,25 @@ export default function ContentManagerPage() {
                                                         );
                                                     })()}
                                                 </div>
-                                                <div className="flex items-center gap-2 self-end md:self-auto w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-gray-100 mt-2 md:mt-0">
+                                                <div className="flex flex-wrap items-center gap-2 self-start w-full md:w-auto md:self-auto justify-start md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-gray-100 mt-2 md:mt-0">
                                                     <Link
                                                         href={`/article/${article.slug}`}
                                                         target="_blank"
-                                                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0"
                                                         title="Preview"
                                                     >
                                                         <Eye className="w-4 h-4" />
                                                     </Link>
                                                     <button
                                                         onClick={() => openEditor(article.slug)}
-                                                        className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                                        className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors flex-shrink-0"
                                                         title="Edit"
                                                     >
                                                         <Edit className="w-4 h-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => setRegenerateModal({ slug: article.slug, keyword: article.mainKeyword || article.title })}
-                                                        className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                        className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors flex-shrink-0"
                                                         disabled={regeneratingSlug === article.slug}
                                                         title="Regenerate"
                                                     >
@@ -558,7 +587,7 @@ export default function ContentManagerPage() {
                                                         <button
                                                             onClick={() => handleUndo(article.slug)}
                                                             disabled={undoingSlug === article.slug}
-                                                            className="p-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-50"
+                                                            className="p-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
                                                             title="Undo"
                                                         >
                                                             {undoingSlug === article.slug ? (
@@ -570,10 +599,17 @@ export default function ContentManagerPage() {
                                                     )}
                                                     <button
                                                         onClick={() => handleDelete(article.slug)}
-                                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
                                                         title="Delete"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setPublishModal({ slug: article.slug, title: article.title })}
+                                                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border-l border-gray-100 ml-1 flex-shrink-0"
+                                                        title="Publish to WordPress"
+                                                    >
+                                                        <Globe className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -778,6 +814,67 @@ export default function ContentManagerPage() {
                                                     <>
                                                         <Sparkles className="w-4 h-4" />
                                                         Regenerate Now
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Publish Modal */}
+                            {publishModal && (
+                                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                                    <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+                                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-blue-50 to-cyan-50">
+                                            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                                <Globe className="w-5 h-5 text-blue-600" />
+                                                Publish to WordPress
+                                            </h3>
+                                            <button onClick={() => setPublishModal(null)} className="text-gray-400 hover:text-gray-600">
+                                                <X className="w-6 h-6" />
+                                            </button>
+                                        </div>
+                                        <div className="p-6 space-y-4">
+                                            <div>
+                                                <p className="text-sm text-gray-600 mb-2">
+                                                    Publishing: <strong className="text-gray-900">{publishModal.title}</strong>
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <label className="label">Status Draft/Publish</label>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <label className={`border rounded-lg p-3 cursor-pointer flex items-center justify-center gap-2 ${publishStatus === 'draft' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'hover:bg-gray-50'}`}>
+                                                        <input type="radio" name="status" value="draft" checked={publishStatus === 'draft'} onChange={() => setPublishStatus('draft')} className="sr-only" />
+                                                        <FileText className="w-4 h-4" />
+                                                        Draft
+                                                    </label>
+                                                    <label className={`border rounded-lg p-3 cursor-pointer flex items-center justify-center gap-2 ${publishStatus === 'publish' ? 'bg-green-50 border-green-500 text-green-700' : 'hover:bg-gray-50'}`}>
+                                                        <input type="radio" name="status" value="publish" checked={publishStatus === 'publish'} onChange={() => setPublishStatus('publish')} className="sr-only" />
+                                                        <Send className="w-4 h-4" />
+                                                        Publish
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+                                            <button onClick={() => setPublishModal(null)} className="btn-secondary">
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={handlePublishToWP}
+                                                disabled={publishing}
+                                                className="btn-primary flex items-center gap-2"
+                                            >
+                                                {publishing ? (
+                                                    <>
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                        Publishing...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Upload className="w-4 h-4" />
+                                                        Post to WP
                                                     </>
                                                 )}
                                             </button>

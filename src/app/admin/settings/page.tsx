@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Settings, Database, Lightbulb, CheckCircle, Save, Loader2, MessageSquare, Share2, Palette, Image, Type, Bot, Zap } from 'lucide-react';
+import { Settings, Database, Lightbulb, CheckCircle, Save, Loader2, MessageSquare, Share2, Palette, Image, Type, Bot, Zap, Globe } from 'lucide-react';
 import { useToast } from '@/components/ToastProvider';
 
 export default function SettingsPage() {
@@ -405,6 +405,9 @@ export default function SettingsPage() {
                 </div>
             </div>
 
+            {/* WordPress Integration */}
+            <WordPressSettingsCard />
+
             {/* Save Button */}
             <div className="flex items-center justify-between">
                 <div>
@@ -440,6 +443,157 @@ export default function SettingsPage() {
                     <li>• Include accurate pricing and features in product knowledge</li>
                     <li>• Keep product information up-to-date</li>
                 </ul>
+            </div>
+        </div>
+    );
+}
+
+function WordPressSettingsCard() {
+    const [wpSettings, setWpSettings] = useState({ url: '', username: '', applicationPassword: '', defaultStatus: 'draft' });
+    const [hasPassword, setHasPassword] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [testing, setTesting] = useState(false);
+    const { showToast } = useToast();
+
+    useEffect(() => {
+        fetch('/api/settings/wordpress')
+            .then(res => res.json())
+            .then(data => {
+                setWpSettings(prev => ({
+                    ...prev,
+                    url: data.url || '',
+                    username: data.username || '',
+                    defaultStatus: data.defaultStatus || 'draft'
+                }));
+                setHasPassword(data.hasPassword);
+            })
+            .catch(() => showToast('Failed to load WP settings', 'error'))
+            .finally(() => setLoading(false));
+    }, []);
+
+    const handleSave = async () => {
+        try {
+            const res = await fetch('/api/settings/wordpress', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(wpSettings)
+            });
+            if (res.ok) {
+                showToast('WordPress settings saved', 'success');
+                if (wpSettings.applicationPassword) setHasPassword(true);
+            } else {
+                showToast('Failed to save settings', 'error');
+            }
+        } catch (e) {
+            showToast('Error saving settings', 'error');
+        }
+    };
+
+    const handleTest = async () => {
+        if (!wpSettings.url || !wpSettings.username) {
+            showToast('URL and Username are required', 'error');
+            return;
+        }
+        if (!wpSettings.applicationPassword && !hasPassword) {
+            showToast('Application Password is required for testing', 'error');
+            return;
+        }
+
+        setTesting(true);
+        try {
+            // Need password to test. If we have it in state, use it. 
+            // If it's saved but not in state (hasPassword=true), we can't test without user re-entering it for security 
+            // OR we'd need a backend endpoint that tests using stored credentials.
+            // Our current backend /api/wordpress/test expects the password in the body.
+
+            if (!wpSettings.applicationPassword) {
+                showToast('Please enter the password again to test connection', 'info');
+                setTesting(false);
+                return;
+            }
+
+            const res = await fetch('/api/wordpress/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(wpSettings)
+            });
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                showToast('Connection Successful! ✅', 'success');
+            } else {
+                showToast('Connection Failed: ' + (data.error || 'Unknown error'), 'error');
+            }
+        } catch (e) {
+            showToast('Connection Error', 'error');
+        } finally {
+            setTesting(false);
+        }
+    };
+
+    if (loading) return <div className="card p-6"><Loader2 className="animate-spin" /></div>;
+
+    return (
+        <div className="card">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center gap-2">
+                <Globe className="w-5 h-5 text-blue-600" />
+                <div>
+                    <h3 className="font-semibold text-gray-900">WordPress Integration</h3>
+                    <p className="text-sm text-gray-500">Connect to your WordPress site to publish articles directly.</p>
+                </div>
+            </div>
+            <div className="p-6 space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                        <label className="label">WordPress Site URL</label>
+                        <input
+                            type="url"
+                            value={wpSettings.url}
+                            onChange={e => setWpSettings({ ...wpSettings, url: e.target.value })}
+                            placeholder="https://your-wordpress-site.com"
+                            className="input"
+                        />
+                    </div>
+                    <div>
+                        <label className="label">Username</label>
+                        <input
+                            type="text"
+                            value={wpSettings.username}
+                            onChange={e => setWpSettings({ ...wpSettings, username: e.target.value })}
+                            placeholder="admin"
+                            className="input"
+                        />
+                    </div>
+                </div>
+                <div>
+                    <label className="label">Application Password</label>
+                    <div className="flex gap-2">
+                        <input
+                            type="password"
+                            value={wpSettings.applicationPassword}
+                            onChange={e => setWpSettings({ ...wpSettings, applicationPassword: e.target.value })}
+                            placeholder={hasPassword ? "•••••••••••••••••••• (Saved)" : "Enter Application Password"}
+                            className="input flex-1"
+                        />
+                        <button
+                            onClick={handleTest}
+                            disabled={testing}
+                            className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 font-medium flex items-center gap-2"
+                        >
+                            {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 text-amber-500" />}
+                            Test
+                        </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                        Get this from your WP Admin &gt; Users &gt; Profile &gt; Application Passwords.
+                    </p>
+                </div>
+                <div className="flex justify-end pt-2">
+                    <button onClick={handleSave} className="btn-primary flex items-center gap-2">
+                        <Save className="w-4 h-4" />
+                        Save Credentials
+                    </button>
+                </div>
             </div>
         </div>
     );

@@ -76,3 +76,13 @@ export const generationJobs = sqliteTable('generation_jobs', {
     createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
     updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
+
+// WordPress Settings table - stores WP connection details
+export const wordpressSettings = sqliteTable('wordpress_settings', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    url: text('url').notNull(),
+    username: text('username').notNull(),
+    applicationPassword: text('application_password').notNull(),
+    defaultStatus: text('default_status').default('draft'), // 'draft', 'publish'
+    updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
