@@ -20,7 +20,9 @@ async function getArticles() {
     author: articles.author,
     imageUrl: articles.imageUrl,
     publishedAt: articles.publishedAt
-  }).from(articles).orderBy(desc(articles.publishedAt));
+  }).from(articles)
+    .where(eq(articles.status, 'published')) // Only show published articles
+    .orderBy(desc(articles.publishedAt));
 }
 
 async function getBranding() {

@@ -30,8 +30,9 @@ export async function GET() {
             imageUrl: articles.imageUrl,
             imageAlt: articles.imageAlt,
             previousContentHtml: articles.previousContentHtml,
+            status: articles.status,
             publishedAt: articles.publishedAt
-        }).from(articles).orderBy(desc(articles.publishedAt));
+        }).from(articles).orderBy(desc(articles.id)); // Order by newest first
 
         return NextResponse.json(allArticles);
     } catch (error: any) {
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
         const imageUrl = `https://picsum.photos/seed/${encodeURIComponent(finalSlug)}/800/400`;
         const imageAlt = `Ilustrasi ${generatedArticle.title}`;
 
-        // Save to database
+        // Save to database (starts as draft)
         const result = await db.insert(articles).values({
             keywordId: keywordId || null,
             title: generatedArticle.title,
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
             author: 'Admin',
             imageUrl: imageUrl,
             imageAlt: imageAlt,
-            publishedAt: new Date()
+            status: 'draft' // New articles start as draft
         }).returning();
 
         // Update keyword status if keywordId provided

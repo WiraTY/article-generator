@@ -36,6 +36,7 @@ export const articles = sqliteTable('articles', {
     imageUrl: text('image_url'), // Custom featured image URL
     imageAlt: text('image_alt'), // Custom alt text for image
     author: text('author'),
+    status: text('status').notNull().default('draft'), // 'draft', 'published'
     publishedAt: integer('published_at', { mode: 'timestamp' }),
     views: integer('views').default(0).notNull(),
 });

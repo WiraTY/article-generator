@@ -65,10 +65,27 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     const { slug } = await params;
     const article = await getArticle(slug);
     const session = (await cookies()).get('admin_session');
-    const isLoggedIn = !!session?.value;
+
+    // Verify JWT session properly
+    let isAdmin = false;
+    if (session?.value) {
+        try {
+            const { verifySession } = await import('@/lib/auth/jwt');
+            const payload = await verifySession(session.value);
+            isAdmin = !!payload && (payload.role === 'super_admin' || payload.role === 'author');
+        } catch {
+            isAdmin = false;
+        }
+    }
 
     if (!article) {
         notFound();
+    }
+
+    // Draft protection: only admins can view draft articles
+    const isDraft = article.status === 'draft';
+    if (isDraft && !isAdmin) {
+        notFound(); // Return 404 for non-admins trying to access draft
     }
 
     // Get social share settings
@@ -116,7 +133,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         currentTags = article.tags ? JSON.parse(article.tags) : [];
     } catch { currentTags = []; }
 
-    // Get related articles with tags and images
+    // Get related articles with tags and images (only published ones)
     const allArticles = await db.select({
         id: articles.id,
         title: articles.title,
@@ -124,7 +141,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         metaDescription: articles.metaDescription,
         tags: articles.tags,
         imageUrl: articles.imageUrl,
-    }).from(articles).orderBy(desc(articles.publishedAt)).limit(20);
+    }).from(articles)
+        .where(eq(articles.status, 'published'))
+        .orderBy(desc(articles.publishedAt))
+        .limit(20);
 
     // Filter out current article and sort by tag match score
     const relatedArticles = allArticles
@@ -161,7 +181,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                         <span className="font-bold tracking-tight text-gray-900">{branding.appName}</span>
                     </Link>
 
-                    {isLoggedIn ? (
+                    {isAdmin ? (
                         <Link href="/admin" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2">
                             <LayoutDashboard className="w-4 h-4" />
                             Dashboard
@@ -174,6 +194,19 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                     )}
                 </div>
             </nav>
+
+            {/* Draft Preview Banner - Only visible to admins */}
+            {isDraft && isAdmin && (
+                <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+                    <div className="max-w-screen-xl mx-auto flex items-center justify-center gap-2 text-amber-800">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span className="font-medium">Draft Preview</span>
+                        <span className="text-sm">— This article is not published yet. Only admins can see this page.</span>
+                    </div>
+                </div>
+            )}
 
             <article className="w-full">
                 {/* Header */}

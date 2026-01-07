@@ -33,6 +33,7 @@ interface Article {
     tags: string;
     imageUrl: string;
     imageAlt: string;
+    status: 'draft' | 'published';
     publishedAt: string;
 }
 
@@ -507,7 +508,7 @@ export default function ContentManagerPage() {
                             <div className="card overflow-hidden">
                                 <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50 flex items-center gap-2">
                                     <FileText className="w-5 h-5 text-green-600" />
-                                    <h3 className="font-semibold text-gray-900">Published Articles ({articles.length})</h3>
+                                    <h3 className="font-semibold text-gray-900">All Articles ({articles.length})</h3>
                                 </div>
                                 {articles.length === 0 ? (
                                     <div className="px-6 py-12 text-center text-gray-500 flex flex-col items-center">
@@ -519,9 +520,14 @@ export default function ContentManagerPage() {
                                         {articles.map((article) => (
                                             <div key={article.id} className="px-4 py-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between hover:bg-gray-50 group gap-4 md:gap-0">
                                                 <div className="flex-1 w-full min-w-0 pr-0 md:pr-4">
-                                                    <Link href={`/article/${article.slug}`} target="_blank" className="font-medium text-gray-900 hover:text-blue-600 block text-base md:text-lg break-words leading-tight">
-                                                        {article.title}
-                                                    </Link>
+                                                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                        <Link href={`/article/${article.slug}`} target="_blank" className="font-medium text-gray-900 hover:text-blue-600 text-base md:text-lg break-words leading-tight">
+                                                            {article.title}
+                                                        </Link>
+                                                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${article.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                            {article.status === 'published' ? 'Published' : 'Draft'}
+                                                        </span>
+                                                    </div>
                                                     <p className="text-sm text-gray-500 mt-1 break-words line-clamp-2 md:truncate">{article.metaDescription}</p>
                                                     {article.mainKeyword && (
                                                         <span className="text-xs text-blue-600 flex items-center gap-1 mt-2">
@@ -604,6 +610,29 @@ export default function ContentManagerPage() {
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
+                                                    {/* Publish Locally Button - only for drafts */}
+                                                    {article.status === 'draft' && (
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const res = await fetch(`/api/articles/${article.slug}/publish`, { method: 'POST' });
+                                                                    if (res.ok) {
+                                                                        showToast('Article published locally!', 'success');
+                                                                        fetchData();
+                                                                    } else {
+                                                                        const data = await res.json();
+                                                                        showToast(data.error || 'Failed to publish', 'error');
+                                                                    }
+                                                                } catch {
+                                                                    showToast('Failed to publish article', 'error');
+                                                                }
+                                                            }}
+                                                            className="p-2 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors flex-shrink-0 border-l border-gray-100 ml-1"
+                                                            title="Publish Locally (Make visible on blog)"
+                                                        >
+                                                            <CheckCircle className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                     <button
                                                         onClick={() => setPublishModal({ slug: article.slug, title: article.title })}
                                                         className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border-l border-gray-100 ml-1 flex-shrink-0"

@@ -209,7 +209,7 @@ async function processJobInBackground(jobId: number) {
             const imageUrl = `https://picsum.photos/seed/${encodeURIComponent(finalSlug)}/800/400`;
             const imageAlt = `Ilustrasi ${generatedArticle.title}`;
 
-            // Save article to database
+            // Save article to database (starts as draft, no publishedAt)
             const articleResult = await db.insert(articles).values({
                 keywordId: job.keywordId || null,
                 title: generatedArticle.title,
@@ -221,7 +221,7 @@ async function processJobInBackground(jobId: number) {
                 author: 'Admin',
                 imageUrl: imageUrl,
                 imageAlt: imageAlt,
-                publishedAt: new Date()
+                status: 'draft' // New articles start as draft
             }).returning();
 
             // Update keyword status if keywordId provided
